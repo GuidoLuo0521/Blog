@@ -263,7 +263,164 @@ EnableWindow(hwndParent, TRUE) ;
 
 
 
+### 定义
+
+#### `DECLARE_MESSAGE_MAP()`
+
+**首先在使用消息映射之前，必须先声明DECLARE_MESSAGE_MAP()**
+
+DECLARE_MESSAGE_MAP()是个宏定义，对应的源码为
+
+~~~c++
+#define DECLARE_MESSAGE_MAP() 
+private: 
+	static const AFX_MSGMAP_ENTRY _messageEntries[]; 
+protected: 
+	static AFX_DATA const AFX_MSGMAP messageMap; 
+	static const AFX_MSGMAP* PASCAL _GetBaseMessageMap(); 
+	virtual const AFX_MSGMAP* GetMessageMap() const; 
+~~~
+
+**声明添加了两个成员变量和两个成员函数：**
+
+**`_messageEntries`**: 是一个`AFX_MSGMAP_ENTRY`（定义了消息路由）类型数组，即路由表。
+
+~~~c++
+struct AFX_MSGMAP_ENTRY
+{
+	UINT nMessage;    //消息类型
+	UINT nCode;       // 控制码
+	UINT nID;         // 控件ID
+	UINT nLastID;      // 控件ID范围, 对于单控件消息处理，与nID相同
+	UINT nSig;         // 信号类型
+	AFX_PMSG pfn;    //回调函数，即处理函数
+};
+~~~
+
+**`messageMap`**： 路由信息，包含父类路由信息指针，和本类的路由表指针。
+
+~~~c++
+struct AFX_MSGMAP
+{
+	const AFX_MSGMAP* pBaseMap;		//指向父类的指针
+	const AFX_MSGMAP_ENTRY* lpEntries;	//路由表指针
+};
+~~~
+
+#### `BEGIN_MESSAGE_MAP`
+
+**查看`BEGIN_MESSAGE_MAP`在`.cpp`文件中的定义**
+
+~~~c++
+BEGIN_MESSAGE_MAP(CMfc_testApp, CWinApp)
+	ON_COMMAND(ID_FILE_NEW, CWinApp::OnFileNew)
+END_MESSAGE_MAP()
+~~~
+
+可以看到`BEGIN_MESSAGE_MAP`也是一个宏。然后上面的`ON_COMMAND`也是宏定义，全部展开后代码为：
+
+~~~c++
+const AFX_MSGMAP* theClass::GetMessageMap() const 
+{ 
+	return &theClass::messageMap; 
+} 
+const AFX_MSGMAP* PASCAL theClass::_GetBaseMessageMap() 
+{ 
+	return &baseClass::messageMap; 
+}
+AFX_COMDAT AFX_DATADEF const AFX_MSGMAP theClass::messageMap = 
+{ 
+	&baseClass::messageMap,				//基类路由信息指针
+        &theClass::_messageEntries[0]		       //路由表数组地址
+}; 
+ 
+AFX_COMDAT const AFX_MSGMAP_ENTRY theClass::_messageEntries[] = 
+{ 
+	{WM_COMMAND,N_COMMAND,(WORD)id,(WORD)id,AfxSig_vv,(AFX_PMSG)&memberFxn },
+	{0, 0, 0, AfxSig_end, (AFX_PMSG)0 } 
+};
+~~~
+
+可以看到，通过宏定义和消息内嵌的方式，已经全部初始化消息路由相关的成员变量和方法，结构如下图所示：
+
+![image-20210723221925080](images/image-20210723221925080.png)
+
+#### **消息循环：**
+
+**`CWnd::OnWndMsg`（位于`WINCORE.cpp`文件中）**
+
+~~~C++
+if (message == pMsgCache->nMsg && pMessageMap == pMsgCache->pMessageMap)
+{
+	//处理在当前类的路由表和缓存命中
+}
+else
+{
+	// 当前类路由表和缓存找不到，
+	pMsgCache->nMsg = message;
+	pMsgCache->pMessageMap = pMessageMap;
+	
+	//通过pMessageMap = pMessageMap->pBaseMap递归往基类深入查找匹配
+ 
+	for (; pMessageMap != NULL; pMessageMap = pMessageMap->pBaseMap)
+	{
+		.....
+	}
+	.....
+}
+~~~
+
+
+
+`BEGIN_MESSAGE_MAP( theClass, baseClass )`
+
+参数：
+
+| `theClass`  | 指定消息映射所属的类的名字。 |
+| ----------- | ---------------------------- |
+| `baseClass` | 指定`theClass`的基类的名字。 |
+
+
+
+
+
 
 
 ## Qt信号槽
+
+更类似观察者模式，connect的时候加入 list，emit的时候发送广播,update()
+
+### 连接函数
+
+~~~C++
+QObject::connect(const QObject *sender, const char *signal,  
+                const QObject *receiver, const char *method,  
+                Qt::ConnectionType type = Qt::AutoCompatConnection)
+~~~
+
+这是我们最常用的形式。connect() 一般会使用前面四个参数，
+
+* 第一个是发出信号的对象，
+
+* 第二个是发送对象发出的信号，
+
+* 第三个是接收信号的对象，
+
+* 第四个是接收对象在接收到信号之后所需要调用的函数。
+
+也就是说，当 sender 发出了 signal 信号之后，会自动调用 receiver 的 slot 函数。
+
+其中最后一个参数是枚举类型定义了三种信号和槽的连接方式:
+
+(1) `Qt::DirectConnection` :信号发送后立即传递给相关联的槽函数,只有槽函数执行完毕返回后,发送信号"emit <信号>" 之后的代码才被执行，相当于`MFC`的`SendMessage()`
+
+(2) `Qt::QueuedConnection `: 信号发送后排队,知道事件循环(event)有能力将它传递给槽; 而不管槽函数有没有执行,发送信号"emit <信号>" 之后的代码都会立即得到执行，相当于`MFC`的`PostMessage()`。
+
+(3) `Qt::AutoConnection `: 如果信号和槽函数在同一线程, 信号发出后,槽函数将立即执行, 等于`Qt::DirectConnection`; 如果信号和槽不在同一个线程,信号将排队,等待事件循环的处理,效果等同于`Qt::QueuedConnection`
+
+
+
+
+
+
 
