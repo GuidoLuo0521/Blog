@@ -382,6 +382,55 @@ else
 
 
 
+### 使用：
+
+#### 定义消息
+
+> 用户自定义的消息ID范围： 
+> `WM_USER: 0x0400-0x7FFF` (例：`WM_USER+10`) 
+> `WM_APP(winver> 4.0)`：`0x8000-0xBFFF` (例：`WM_APP+4`) 
+
+~~~c++
+#define GUIDO_MY_MSG 0X0401
+#define GUIDO_MY_MSG1 WM_USER+10
+~~~
+
+#### 增加消息处理函数
+
+~~~c++
+// 定义
+afx_msg LRESULT OnGuidoMyMessage(WPARAM wParam, LPARAM lParam); 
+afx_msg LRESULT OnGuidoMyMessage1(WPARAM wParam, LPARAM lParam); 
+//实现
+LRESULT CTestDlg::OnMyMessage(WPARAM wParam, LPARAM lParam)
+{
+  //添加自己的消息处理
+  ……
+  return 0;  
+}
+~~~
+
+添加消息映射
+
+~~~C++
+BEGIN_MESSAGE_MAP(CTestDlg, CDialog)
+  ON_MESSAGE(GUIDO_MY_MSG, OnGuidoMyMessage)
+  ON_MESSAGE(GUIDO_MY_MSG1, OnGuidoMyMessage1)   
+END_MESSAGE_MAP()
+~~~
+
+发送消息
+
+~~~c++
+SendMessage( GUIDO_MY_MSG, 0, 0);	// 阻塞，同步
+//或者
+PostMessage(GUIDO_MY_MSG1, 0, 0);   // 异步
+~~~
+
+
+
+
+
 
 
 
@@ -419,6 +468,12 @@ QObject::connect(const QObject *sender, const char *signal,
 (3) `Qt::AutoConnection `: 如果信号和槽函数在同一线程, 信号发出后,槽函数将立即执行, 等于`Qt::DirectConnection`; 如果信号和槽不在同一个线程,信号将排队,等待事件循环的处理,效果等同于`Qt::QueuedConnection`
 
 
+
+## 对比
+
+`MFC`：较为复杂，不管自定义消息，还是处理函数，都要遵循windows的相应借口，然后自己强转。
+
+`Qt`：简单，优雅，在一个地方随时绑定，更容易
 
 
 
