@@ -20,6 +20,8 @@ private slots:
 
     void on_QSharedPointerTest_clicked();
 
+    void on_btnLimeReport_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

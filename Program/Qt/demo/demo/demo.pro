@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui printsupport qml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,18 +16,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    limereportwidget.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     QPointerDemo.h \
     QSharedPointerDemo.h \
+    limereportwidget.h \
     mainwindow.h
 
 FORMS += \
+    limereportwidget.ui \
     mainwindow.ui
+
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/limereport/win32/debug/lib/ -llimereport
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/limereport/win32/debug/lib/ -llimereportd
+
+INCLUDEPATH += $$PWD/limereport/win32/debug/lib/include
+DEPENDPATH += $$PWD/limereport/win32/debug/lib/include
