@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QDebug>
 #include <QPointer>
-#include <QException>
 
 class CPointerDemoWidget : public QWidget
 {
@@ -30,7 +29,6 @@ public:
 
         CPointerDemoWidget * pDemoWidget = new CPointerDemoWidget;
         delete pDemoWidget;
-
 
         if(pDemoWidget)
             pDemoWidget->show();

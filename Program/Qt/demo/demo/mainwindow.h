@@ -18,6 +18,8 @@ public:
 private slots:
     void on_QPointerTest_clicked();
 
+    void on_QSharedPointerTest_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

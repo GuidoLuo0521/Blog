@@ -21,6 +21,7 @@ SOURCES += \
 
 HEADERS += \
     QPointerDemo.h \
+    QSharedPointerDemo.h \
     mainwindow.h
 
 FORMS += \
