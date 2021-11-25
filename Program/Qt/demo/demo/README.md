@@ -1,7 +1,0 @@
-# Featrue
-
-* QPointer
-
-* QSharedPointer
-
-* LimeReport
