@@ -12,9 +12,9 @@
 
 * [Qt 中的属性系统（Property System）](https://zhuanlan.zhihu.com/p/43348546)
 
+## xingzaicpp
 
-
-
+* [简要源码分析Q_PROPERTY](https://blog.csdn.net/sabcdefg/article/details/111241934)
 
 # The Property System
 
@@ -547,12 +547,70 @@ Q_CLASSINFO("Version", "3.0.0")
 
 
 
+# 简要源码分析Q_PROPERTY
 
+~~~c++
+class Test : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled)
+public:
+    explicit Test(QObject *parent = 0);
+    ~Test();
+ 
+    void setEnabled(bool e) { m_bEnable = e; }
+    bool isEnabled() const { return m_bEnable; }
+ 
+private:
+    bool m_bEnable;
+};
+~~~
+
+我们实现了setEnabled和isEnabled,
+然而,你可能会反问,这不就是个属性嘛,为了防止直接访问内部变量,我也经常写这样的代码啊.这样写的好处是保护成员变量不被意外修改.
+然而,我想说的是,QT属性系统的精髓在于,可以用QObject的方法来访问继承类的属性.
+还记得前面吗,增加了字符串"bool"和"enabled"
+来,我们看看如何用基类来访问属性.
+
+~~~c++
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+ 
+    Test t;
+    QObject *p = &t;
+ 
+    qDebug() << t.isEnabled() << endl;
+    qDebug() << p->property("enabled").toBool() << endl;
+ 
+    p->setProperty("enabled", true);
+ 
+    qDebug() << t.isEnabled() << endl;
+    qDebug() << p->property("enabled").toBool() << endl;
+ 
+ 
+    return a.exec();
+}
+~~~
+
+
+
+QT的属性系统为我们提供了在基类访问子类的属性的方法
+
+那就是相当于属性是定义在基类里面的
 
 # 总结
+
+## 20211229
 
 那就是说，属性系统相当于对外暴露的一个属性，主要是为了  `QML` 和 `C++` 共同使用方便
 
 好比，c++ 中直接定义一个成员变量，在 C++ 代码中可以访问，但是 `QML` 就不能够了 ，所以，要对 `QML`也进行暴露一下，这就使用这个宏来。
 
 当然，这个宏也是定义属性的一个方法。
+
+## 20211230
+
+QT的属性系统为我们提供了在基类访问子类的属性的方法
