@@ -181,15 +181,83 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 
 这个小例子展示了模型的被动性质。该模型不知道何时使用或需要哪些数据。它只是在每次视图请求时提供数据。
 
-当模型的数据需要更改时会发生什么？视图如何意识到数据发生了变化，需要再次读取？该模型必须发出一个信号，表明哪些细胞范围发生了变化。这将在 2.3 节中演
+当模型的数据需要更改时会发生什么？视图如何意识到数据发生了变化，需要再次读取？该模型必须发出一个信号，表明哪些单元格范围发生了变化。
 
 ![image-20220125233911516](modelview.assets/image-20220125233911516.png)
 
 
 
-[Extending the Read Only Example with Roles]https://doc.qt.io/qt-5/modelview.html#2-2-extending-the-read-only-example-with-roles
+## [Extending the Read Only Example with Roles](https://doc.qt.io/qt-5/modelview.html#2-2-extending-the-read-only-example-with-roles)
+
+date() 接口，除了控制显示内容，也控制其他的变化，根据 参数 `int role`来控制返回值，比如下面列表的显示内容，正式话的语言就是：通过调用这个接口来格式化表格。
+
+**相当于，每一个操作，都会调用一次date() 接口，获取的所有信息均是通过 date() 接口来获取。**
+
+![image-20220125233911516](modelview.assets/image-20220125233911516.png)
+
+`(file source: examples/widgets/tutorials/modelview/2_formatting/mymodel.cpp)`
+
+~~~c++
+// mymodel.cpp
+QVariant MyModel::data(const QModelIndex &index, int role) const
+{
+    int row = index.row();
+    int col = index.column();
+    // generate a log message when this method gets called
+    qDebug() << QString("row %1, col%2, role %3")
+            .arg(row).arg(col).arg(role);
+
+    switch (role) {
+    case Qt::DisplayRole:
+        if (row == 0 && col == 1) return QString("<--left");
+        if (row == 1 && col == 1) return QString("right-->");
+
+        return QString("Row%1, Column%2")
+                .arg(row + 1)
+                .arg(col +1);
+    case Qt::FontRole:
+        if (row == 0 && col == 0) { //change font only for cell(0,0)
+            QFont boldFont;
+            boldFont.setBold(true);
+            return boldFont;
+        }
+        break;
+    case Qt::BackgroundRole:
+        if (row == 1 && col == 2)  //change background only for cell(1,2)
+            return QBrush(Qt::red);
+        break;
+    case Qt::TextAlignmentRole:
+        if (row == 1 && col == 1) //change text alignment only for cell(1,1)
+            return int(Qt::AlignRight | Qt::AlignVCenter);
+        break;
+    case Qt::CheckStateRole:
+        if (row == 1 && col == 0) //add a checkbox to cell(1,0)
+            return Qt::Checked;
+        break;
+    }
+    return QVariant();
+}
+~~~
 
 
+
+**通过 role 属性，来获取参数值**
+
+| [enum Qt::ItemDataRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |                           Meaning                            |                             Type                             |
+| :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| [Qt::DisplayRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |                             text                             |        [QString](https://doc.qt.io/qt-5/qstring.html)        |
+| [Qt::FontRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |                             font                             |          [QFont](https://doc.qt.io/qt-5/qfont.html)          |
+| [BackgroundRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |             brush for the background of the cell             |         [QBrush](https://doc.qt.io/qt-5/qbrush.html)         |
+| [Qt::TextAlignmentRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |                        text alignment                        | [enum Qt::AlignmentFlag](https://doc.qt.io/qt-5/qt.html#AlignmentFlag-enum) |
+| [Qt::CheckStateRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) | suppresses checkboxes with [QVariant()](https://doc.qt.io/qt-5/qvariant.html),sets checkboxes with [Qt::Checked](https://doc.qt.io/qt-5/qt.html#CheckState-enum) or [Qt::Unchecked](https://doc.qt.io/qt-5/qt.html#CheckState-enum) | [enum Qt::ItemDataRole](https://doc.qt.io/qt-5/qt.html#ItemDataRole-enum) |
+
+
+
+## A Clock inside a Table Cell
+
+![image-20220126143645147](modelview.assets/image-20220126143645147.png)
+
+在第一行一列（0,0）的位置，增加一个显示时间的东西
 
 
 
@@ -202,3 +270,9 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 [modelview 官方文档](https://doc.qt.io/qt-5/modelview.html)
 
 [Model/View Programming](https://doc.qt.io/qt-5/model-view-programming.html)
+
+
+
+
+
+[重定向](https://github.com/GuidoLuo0521/Notes/tree/master/Qt/GuidoDemo/notes/nodelview.md)
